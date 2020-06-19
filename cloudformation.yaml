@@ -8,13 +8,17 @@ Parameters:
   MyName:
     Type: String
     Description: Name of the Candidate
-    Default: team_detail
+    Default: Challenge_team
+  InsertItemFunctionName:
+    Type: String
+    Description: Name of lambda for insert item
+    Default: tech-test-insertItem
 
 Resources:
   DynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub Challenge_${MyName}
+      TableName: !Ref MyName
       AttributeDefinitions:
         - AttributeName: team
           AttributeType: S
@@ -28,6 +32,7 @@ Resources:
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: !Ref InsertItemFunctionName
       Code:
         ZipFile: |
           import json
@@ -75,12 +80,17 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
-            - logs:*
-            Resource: arn:aws:logs:*:*:*
+            - logs:CreateLogGroup
+            Resource: '*'
           - Effect: Allow
             Action:
-            - dynamodb:*
-            Resource: arn:aws:dynamodb:*:*:*
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${InsertItemFunctionName}:*'
+          - Effect: Allow
+            Action:
+            - dynamodb:PutItem
+            Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MyName}
 
 
 
