@@ -8,6 +8,7 @@ Parameters:
   MyName:
     Type: String
     Description: Name of the Candidate
+    Default: team_detail
 
 Resources:
   DynamoTable:
@@ -72,10 +73,6 @@ Resources:
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Effect: Allow
-            Action:
-            - lambda:*
-            Resource: '*'
           - Effect: Allow
             Action:
             - logs:*
