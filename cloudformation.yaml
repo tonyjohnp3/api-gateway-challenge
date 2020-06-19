@@ -31,10 +31,11 @@ Resources:
         ZipFile: |
           import json
           import boto3
+          import os
 
           def dynamo_itemcreate(team_name, team_country, team_desc, team_rating):
               dynamodb = boto3.client('dynamodb')
-              db_name = "Challenge_DB"
+              db_name = os.environ['dbName']
               dynamodb.put_item(TableName=db_name, Item={'country':{'S':team_country}, 'team':{'S':team_name}, 'desc':{'S':team_desc}, 'rating':{'S':team_rating}})
 
           def lambda_handler(event, context):
@@ -49,6 +50,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.7
       Timeout: 5
+      Environment:
+        Variables:
+          dbName: !Ref DynamoTable
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
