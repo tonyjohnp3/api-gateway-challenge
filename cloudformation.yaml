@@ -207,6 +207,7 @@ Resources:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
       Name: !Sub RestTechChallenge1_${MyName}
+      ApiKeySourceType: HEADER
       EndpointConfiguration:
         Types: 
           - REGIONAL
@@ -220,6 +221,11 @@ Resources:
       RestApiId: !Ref ApiRestApi
       PathPart: 'add_new'
 
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Enabled: true
+
   ApiMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
@@ -227,6 +233,7 @@ Resources:
       ResourceId: !Ref ApiResource
       HttpMethod: POST
       AuthorizationType: NONE
+      ApiKeyRequired: true
       Integration:
         Type: AWS
         IntegrationHttpMethod: POST
@@ -280,12 +287,28 @@ Resources:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
       RestApiId: !Ref ApiRestApi
-      StageName: v1
+      StageName: !Ref ApiStageName
     DependsOn:
       - ApiMethod
       - ApiModel
       - ApiRestApi
       - APIPermission
+
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+      - ApiId: !Ref ApiRestApi
+        Stage: !Ref ApiStageName
+    DependsOn:
+      - ApiDeployment
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiUsagePlan
 
 Outputs:
   RootUrl:
@@ -297,3 +320,6 @@ Outputs:
         - .execute-api.
         - !Ref 'AWS::Region'
         - .amazonaws.com/
+  ApiKey:
+    Description: API key for Request
+    Value: !Ref ApiKey
