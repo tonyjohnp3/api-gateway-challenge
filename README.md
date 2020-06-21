@@ -5,6 +5,7 @@ This cloudformation will create the following main resources:
 - Dynamo DB table with dynamo DB streams enabled
 - Lambda function to process POST API requests and enter data to table
 - API gateway for above lambda with API key authentication
+- SNS topic
 - Lambda function to process table insert streams and send SNS notification email
 
 Application expects POST requests with API key in the following JSON format:
