@@ -62,6 +62,50 @@ Resources:
         Variables:
           dbName: !Ref DynamoTable
 
+  MySnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint: !Ref PushEmail
+        Protocol: email
+
+  PushToSnsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref PushToSnsFunctionName
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import os
+
+          def lambda_handler(event, context):
+            sns = boto3.client('sns')
+            for record in event['Records']:
+              print('Record: %s' % json.dumps(record))
+              sns.publish(
+                TopicArn=os.environ['snsTopicArn'],
+                Message=json.dumps(record)
+              )
+            print('Successfully processed %s records.' % str(len(event['Records'])))
+      Description: Lambda function to process DynamoDB streams
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt PushToSnsFunctionExecutionRole.Arn
+      Runtime: python3.7
+      Timeout: 5
+      Environment:
+        Variables:
+          snsTopicArn: !Ref MySnsTopic
+
+  PushToSnsFunctionEventMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref PushToSnsFunction
+      EventSourceArn: !GetAtt DynamoTable.StreamArn
+      BatchSize: 1
+      StartingPosition: LATEST
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -94,6 +138,48 @@ Resources:
             - dynamodb:PutItem
             Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MyName}
 
+  PushToSnsFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${PushToSnsFunctionName}'  
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PushToSnsFunctionName}:*'
+          - Effect: Allow
+            Action:
+            - sns:Publish
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - dynamodb:DescribeStream
+            - dynamodb:GetRecords
+            - dynamodb:GetShardIterator
+            - dynamodb:ListStreams
+            Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MyName}/stream/*'
 
 
   APIPermission:
