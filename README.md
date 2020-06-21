@@ -19,6 +19,7 @@ Application expects POST requests with API key in the following JSON format:
 >	"team_rating": "5"
 >
 >}
+
 API gateway uses the API key to authenticate request and forwards to lambda function which enters the data to dynamo DB table. Dynamo DB streams are generated which are processed by second lambda function which sends message to SNS topic, which is subscribed to email notification. 
 
 ## Prerequisites
