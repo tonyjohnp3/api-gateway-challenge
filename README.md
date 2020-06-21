@@ -9,10 +9,15 @@ This cloudformation will create the following main resources:
 
 Application expects POST requests with API key in the following JSON format:
 >{ 
+>
 >	"team_name": "Pacers", 
+>
 >	"team_country": "USA", 
+>
 >	"team_desc": "NBA team",
+>
 >	"team_rating": "5"
+>
 >}
 API gateway uses the API key to authenticate request and forwards to lambda function which enters the data to dynamo DB table. Dynamo DB streams are generated which are processed by second lambda function which sends message to SNS topic, which is subscribed to email notification. 
 
