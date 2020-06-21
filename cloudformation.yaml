@@ -13,6 +13,17 @@ Parameters:
     Type: String
     Description: Name of lambda for insert item
     Default: tech-test-insertItem
+  PushToSnsFunctionName:
+    Type: String
+    Description: Name of lambda to push insert event to SNS
+    Default: tech-test-pushInsertEventToSns
+  PushEmail:
+    Type: String
+    Description: Email to subscribe for push notification
+  ApiStageName:
+    Type: String
+    Description: Stage name of the API Deployment
+    Default: v1
 
 Resources:
   DynamoTable:
