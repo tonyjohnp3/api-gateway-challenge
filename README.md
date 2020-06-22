@@ -46,7 +46,6 @@ The following packages should be available in your system:
 - Now, for every new entry added to table, you'll recieve email notification
 
 ## Improvements:
-- Add validation in lambda for POST body
 - Dockerize application and add 3 musketeers for consistency between various run environments
 - Add authentication using basic or cognito pools etc., rather than just API key
 - Simplify process of getting stack output URL and API key, to get these displayed with just single deployment Make command
